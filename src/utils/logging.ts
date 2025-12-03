@@ -126,7 +126,6 @@ export async function logReportGeneration(
  */
 export async function submitContactLog(data: {
   name: string
-  subject: string
   message: string
 }): Promise<void> {
   const response = await fetch('/api/logs/contact', {

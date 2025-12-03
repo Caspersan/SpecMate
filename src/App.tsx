@@ -219,7 +219,7 @@ function App() {
             onClick={() => setShowContactModal(true)}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            👋 Contact
+            👋 Feedback
           </button>
         </div>
       </footer>
