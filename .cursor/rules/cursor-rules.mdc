@@ -1,0 +1,316 @@
+---
+ruleName: cursor-rules
+description: MaterialSense Cursor Development Rules
+alwaysApply: true
+---
+
+# MaterialSense Cursor Development Rules
+
+## Project Overview
+MaterialSense is a web-based material feasibility analyzer for architects. It analyzes AI-generated building images using Claude Vision API to identify materials and classify them by feasibility (Tier 1: readily available, Tier 2: requires customization, Tier 3: needs R&D).
+
+## Tech Stack
+- **Frontend**: React 18+ with TypeScript, Tailwind CSS (CDN)
+- **No Backend**: Client-side only, no database
+- **AI**: Anthropic Claude API (claude-sonnet-4-20250514) with vision
+- **Storage**: Browser localStorage for API key persistence
+- **Format**: Single-page application, single artifact
+
+## Code Style & Standards
+
+### Environment Variables & API Keys
+- API key stored in .env file (never committed to git)
+- Use VITE_ANTHROPIC_API_KEY for Vite projects
+- Add .env to .gitignore
+- Access via import.meta.env.VITE_ANTHROPIC_API_KEY
+- Never expose API key in client code or console logs
+
+### React
+- Use functional components with hooks only
+- Keep components small and focused
+- Use TypeScript for type safety
+- Prefer const over let
+- Use descriptive variable names (no abbreviations unless standard)
+
+### State Management
+- Use useState for simple state
+- Use useReducer for complex state with multiple related values
+- Keep state as close to where it's used as possible
+- No global state libraries (Context API only if absolutely necessary)
+
+### API Integration
+- All API calls directly to Anthropic API from browser
+- Read API key from environment variable (import.meta.env.VITE_ANTHROPIC_API_KEY)
+- Include comprehensive error handling
+- Show loading states for all async operations
+- Never log API keys or sensitive data
+
+### Styling
+- Use Tailwind utility classes exclusively
+- Follow mobile-first responsive design
+- Use architectural aesthetic: clean, minimal, professional
+- Color scheme: 
+  - Tier 1 (green): bg-green-100, text-green-800, border-green-300
+  - Tier 2 (yellow): bg-yellow-100, text-yellow-800, border-yellow-300
+  - Tier 3 (red): bg-red-100, text-red-800, border-red-300
+
+### File Handling
+- Convert images to base64 for API calls
+- Validate file types (jpeg, png only)
+- Show image preview before analysis
+- Handle large images gracefully (compress if needed)
+
+### Error Handling
+- Always use try-catch for async operations
+- Provide user-friendly error messages
+- Log technical errors to console
+- Never expose API keys in error messages
+- Handle network failures gracefully
+
+### Accessibility
+- Use semantic HTML elements
+- Include alt text for images
+- Ensure keyboard navigation works
+- Maintain color contrast ratios
+- Use ARIA labels where appropriate
+
+## API Usage Guidelines
+
+### Claude Vision API
+```typescript
+// Correct API call structure
+const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+
+const response = await fetch('https://api.anthropic.com/v1/messages', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01'
+  },
+  body: JSON.stringify({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 4096,
+    messages: [{
+      role: 'user',
+      content: [
+        {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: 'image/jpeg',
+            data: base64ImageData
+          }
+        },
+        {
+          type: 'text',
+          text: prompt
+        }
+      ]
+    }]
+  })
+});
+```
+
+### Analysis Prompt Structure
+- Request JSON-only response
+- Specify exact JSON structure expected
+- Include all required fields: name, description, properties, tier, reasoning, csiDivision, csiNumber
+- If sustainability flag enabled: add sustainabilityNotes field with environmental performance data
+- If alternatives flag enabled: add alternatives array with 2-3 alternative materials per item
+- Be explicit about tier classification criteria
+- Request 5-15 materials (comprehensive but not overwhelming)
+- Always classify materials by CSI MasterFormat Division (2-digit format)
+- Common divisions: 03 (Concrete), 04 (Masonry), 05 (Metals), 06 (Wood/Plastics), 07 (Thermal/Moisture), 08 (Openings), 09 (Finishes), 32 (Exterior Improvements)
+
+## Data Structures
+
+### Material Type
+```typescript
+interface Material {
+  name: string;              // Brief descriptive name
+  description: string;       // What you see and its function
+  properties: string[];      // Visual/performance characteristics
+  tier: 1 | 2 | 3;          // Feasibility classification
+  reasoning: string;         // Why this tier was assigned
+  csiDivision: string;      // CSI MasterFormat division name
+  csiNumber: string;        // 2-digit division number (e.g., "08")
+  sustainabilityNotes?: string;  // Optional: environmental performance notes
+  alternatives?: Alternative[];  // Optional: alternative materials
+}
+
+interface Alternative {
+  name: string;             // Alternative material name
+  description: string;      // Brief description
+  tradeoffs: string;        // What's gained/lost vs original
+}
+```
+
+### Analysis Type
+```typescript
+interface Analysis {
+  imageUrl: string;          // Data URL of uploaded image
+  materials: Material[];     // Array of identified materials
+  timestamp: string;         // ISO timestamp
+}
+```
+
+## Component Guidelines
+
+### Image Upload Component
+- Use native file input with drag-and-drop styling
+- Show upload area prominently when no image
+- Display clear image preview after upload
+- Allow re-upload/change image
+- Show file size and dimensions
+
+### Material Cards
+- Use card layout with clear visual hierarchy
+- Show tier badge prominently with color coding
+- Show CSI division badge
+- Display sustainability notes if enabled (with green leaf icon)
+- Display alternatives in expandable section if enabled
+- Make expandable for full details
+- Group by tier in results view
+- Include expand/collapse animation
+
+### Report Generation
+- Generate clean markdown format
+- Include summary statistics at top
+- Organize materials by tier
+- Use proper markdown syntax (headers, lists, bold)
+- Create downloadable .txt file
+- Show preview before download
+
+## Performance Considerations
+- Compress large images before sending to API
+- Show loading indicators for all async operations
+- Debounce user inputs where appropriate
+- Minimize re-renders with proper React patterns
+- Use lazy loading for images if needed
+
+## Security Best Practices
+- Store API key in .env file only
+- Add .env to .gitignore immediately
+- Never commit API keys to version control
+- Validate all user inputs
+- Sanitize any user-generated content
+- Use HTTPS for all API calls
+- Check for API key presence before making calls
+
+## Development Workflow
+1. Start with UI structure
+2. Add API integration with mock data first
+3. Replace mock data with real API calls
+4. Add error handling and loading states
+5. Polish UI and add animations
+6. Test all user flows
+7. Test error cases
+
+## Common Patterns
+
+### Loading State
+```typescript
+const [isLoading, setIsLoading] = useState(false);
+const [error, setError] = useState<string | null>(null);
+
+const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY;
+
+// Validate API key presence and format
+if (!apiKey) {
+  setError('API key not configured. Check your .env file.');
+  return;
+}
+
+if (!apiKey.startsWith('sk-ant-')) {
+  setError('Invalid API key format. Key should start with "sk-ant-"');
+  return;
+}
+
+try {
+  setIsLoading(true);
+  setError(null);
+  // API call
+} catch (err) {
+  setError(err instanceof Error ? err.message : 'An error occurred');
+} finally {
+  setIsLoading(false);
+}
+```
+
+### File Upload Handler
+```typescript
+const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  
+  if (!file.type.startsWith('image/')) {
+    setError('Please upload an image file');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target?.result as string;
+    setImageUrl(dataUrl);
+  };
+  reader.readAsDataURL(file);
+};
+```
+
+### Markdown Report Generation
+```typescript
+const generateMarkdown = (materials: Material[]): string => {
+  const tier1 = materials.filter(m => m.tier === 1);
+  const tier2 = materials.filter(m => m.tier === 2);
+  const tier3 = materials.filter(m => m.tier === 3);
+  
+  // Group materials by CSI Division
+  const groupByCSI = (mats: Material[]) => {
+    const grouped: Record<string, Material[]> = {};
+    mats.forEach(m => {
+      const key = `${m.csiNumber} - ${m.csiDivision}`;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(m);
+    });
+    return grouped;
+  };
+  
+  let md = `# Material Feasibility Analysis Report\n\n`;
+  md += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+  // ... organize by CSI divisions within each tier
+  return md;
+};
+```
+
+## Testing Checklist
+- [ ] Upload various image types (jpg, png)
+- [ ] Test with invalid file types
+- [ ] Test API failures
+- [ ] Test report generation
+- [ ] Test report download
+- [ ] Test on mobile viewport
+- [ ] Test keyboard navigation
+- [ ] Verify API key is read from env correctly
+- [ ] Verify .env is in .gitignore
+
+## Avoid These Mistakes
+- ❌ Don't use external libraries beyond React and Tailwind
+- ❌ Don't store analysis results (no persistence beyond session)
+- ❌ Don't make the UI too complex
+- ❌ Don't forget error handling on API calls
+- ❌ Don't forget loading states
+- ❌ Don't commit .env file or API keys
+- ❌ Don't use inline styles (use Tailwind)
+- ❌ Don't overcomplicate state management
+- ❌ Don't forget mobile responsiveness
+- ❌ Don't skip TypeScript types
+- ❌ Don't expose API key in browser console or dev tools
+
+## When to Ask for Help
+- Complex API integration issues
+- TypeScript type errors that aren't clear
+- Responsive design problems
+- Performance issues with large images
+- Unclear user requirements
+- Feature additions beyond MVP scope

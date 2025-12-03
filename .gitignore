@@ -1,0 +1,58 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Logs directory (contains usage analytics)
+logs/
+
+# Explanatory Files
+EXPORT_INSTRUCTIONS.md
+SECURITY_SUMMARY.md
+VERCEL_DEPLOYMENT_CHECKLIST.md
+VERCEL_DEPLOYMENT_GUIDE.md
+HOSTING_GUIDE.md
+BACKEND_PROXY_REVIEW.md
+BACKEND_PROXY_TESTING.md
+BACKEND_PROXY_MANUAL_TESTING.md
+BACKEND_PROXY_MANUAL_TESTING_REPORT.md
+BACKEND_PROXY_MANUAL_TESTING_REPORT.md
+BACKEND_PROXY_SUMMARY.md
+ERROR_HANDLING_REPORT.md
+GITHUB_PUSH_STEPS.md
+GITHUB_PUSH_STEPS_REPORT.md
+GITHUB_SETUP_GUIDE.md
+MULTI_IMAGE_FEATURE.md
+PRODUCTION_CHECKLIST.md
+PRODUCTION_PROGRESS.md
+PRODUCTION_READINESS_PLAN.md
+PRODUCTION_STATUS.md
+SECURITY_AUDIT_REPORT.md
+SECURITY_SUMMARY.md
+
+
