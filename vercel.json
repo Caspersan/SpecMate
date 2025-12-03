@@ -1,18 +1,4 @@
 {
-  "functions": {
-    "api/anthropic/messages.js": {
-      "maxDuration": 60
-    },
-    "api/logs/usage.js": {
-      "maxDuration": 10
-    },
-    "api/logs/report.js": {
-      "maxDuration": 10
-    },
-    "api/logs/contact.js": {
-      "maxDuration": 10
-    }
-  },
   "rewrites": [
     {
       "source": "/api/anthropic/messages",
