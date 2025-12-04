@@ -185,12 +185,12 @@ app.post('/api/logs/report', async (req, res) => {
 // Contact form logging endpoint
 app.post('/api/logs/contact', async (req, res) => {
   try {
-    const { name, message, timestamp, sessionId } = req.body
+    const { name, subject, message, timestamp, sessionId } = req.body
     
-    if (!name || !message) {
+    if (!name || !subject || !message) {
       return res.status(400).json({
         error: {
-          message: 'Missing required fields: name, message',
+          message: 'Missing required fields: name, subject, message',
           type: 'validation_error'
         }
       })
@@ -201,6 +201,7 @@ app.post('/api/logs/contact', async (req, res) => {
       timestamp: timestamp || new Date().toISOString(),
       sessionId: sessionId || 'unknown',
       name: name.trim(),
+      subject: subject.trim(),
       message: message.trim(),
     }
     

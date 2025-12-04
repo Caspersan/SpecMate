@@ -7,6 +7,7 @@ interface ContactModalProps {
 
 export default function ContactModal({ onClose }: ContactModalProps) {
   const [name, setName] = useState('')
+  const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -31,6 +32,10 @@ export default function ContactModal({ onClose }: ContactModalProps) {
       setErrorMessage('Please enter your name')
       return
     }
+    if (!subject.trim()) {
+      setErrorMessage('Please enter a subject')
+      return
+    }
     if (!message.trim()) {
       setErrorMessage('Please enter a message')
       return
@@ -43,12 +48,14 @@ export default function ContactModal({ onClose }: ContactModalProps) {
     try {
       await submitContactLog({
         name: name.trim(),
+        subject: subject.trim(),
         message: message.trim(),
       })
       
       setSubmitStatus('success')
       // Reset form
       setName('')
+      setSubject('')
       setMessage('')
       
       // Close modal after 2 seconds
@@ -74,7 +81,7 @@ export default function ContactModal({ onClose }: ContactModalProps) {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">💬 Feedback</h2>
+          <h2 className="text-xl font-bold text-gray-900">📧 Contact Us</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -111,6 +118,23 @@ export default function ContactModal({ onClose }: ContactModalProps) {
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Your name"
+                disabled={isSubmitting}
+                required
+              />
+            </div>
+
+            {/* Subject Field */}
+            <div>
+              <label htmlFor="contact-subject" className="block text-sm font-medium text-gray-700 mb-1">
+                Subject <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="contact-subject"
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Message subject"
                 disabled={isSubmitting}
                 required
               />
