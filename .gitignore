@@ -1,66 +1,15 @@
 # Logs
-logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-<<<<<<< HEAD
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Environment variables
-.env
-.env.local
-.env.production
-
-# Logs directory (contains usage analytics)
+# Runtime data directory (not the api/logs source files)
 logs/
 
-# Explanatory Files
-EXPORT_INSTRUCTIONS.md
-SECURITY_SUMMARY.md
-VERCEL_DEPLOYMENT_CHECKLIST.md
-VERCEL_DEPLOYMENT_GUIDE.md
-HOSTING_GUIDE.md
-BACKEND_PROXY_REVIEW.md
-BACKEND_PROXY_TESTING.md
-BACKEND_PROXY_MANUAL_TESTING.md
-BACKEND_PROXY_MANUAL_TESTING_REPORT.md
-BACKEND_PROXY_MANUAL_TESTING_REPORT.md
-BACKEND_PROXY_SUMMARY.md
-ERROR_HANDLING_REPORT.md
-GITHUB_PUSH_STEPS.md
-GITHUB_PUSH_STEPS_REPORT.md
-GITHUB_SETUP_GUIDE.md
-MULTI_IMAGE_FEATURE.md
-PRODUCTION_CHECKLIST.md
-PRODUCTION_PROGRESS.md
-PRODUCTION_READINESS_PLAN.md
-PRODUCTION_STATUS.md
-SECURITY_AUDIT_REPORT.md
-SECURITY_SUMMARY.md
-
-
-=======
-lerna-debug.log*
-
-# Diagnostic reports (https://nodejs.org/api/report.html)
+# Diagnostic reports
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Runtime data
@@ -79,23 +28,23 @@ coverage
 # nyc test coverage
 .nyc_output
 
-# Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
+# Grunt intermediate storage
 .grunt
 
-# Bower dependency directory (https://bower.io/)
+# Bower dependency directory
 bower_components
 
 # node-waf configuration
 .lock-wscript
 
-# Compiled binary addons (https://nodejs.org/api/addons.html)
+# Compiled binary addons
 build/Release
 
 # Dependency directories
 node_modules/
 jspm_packages/
 
-# Snowpack dependency directory (https://snowpack.dev/)
+# Snowpack dependency directory
 web_modules/
 
 # TypeScript cache
@@ -124,7 +73,7 @@ web_modules/
 .env.*
 !.env.example
 
-# parcel-bundler cache (https://parceljs.org/)
+# parcel-bundler cache
 .cache
 .parcel-cache
 
@@ -135,19 +84,16 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+dist-ssr
 
 # Gatsby files
 .cache/
-# Comment in the public line in if your project uses Gatsby and not Next.js
-# https://nextjs.org/blog/next-9-1#public-directory-support
-# public
 
 # vuepress build output
 .vuepress/dist
 
 # vuepress v2.x temp and cache directory
 .temp
-.cache
 
 # Sveltekit cache directory
 .svelte-kit/
@@ -188,7 +134,40 @@ dist
 !.yarn/sdks
 !.yarn/versions
 
-# Vite logs files
+# Vite
+*.local
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
->>>>>>> a8057e4305bee927f9d4d7513d2ec9fe5f1fbb33
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Explanatory/Documentation Files (not needed in production)
+EXPORT_INSTRUCTIONS.md
+SECURITY_SUMMARY.md
+VERCEL_DEPLOYMENT_CHECKLIST.md
+VERCEL_DEPLOYMENT_GUIDE.md
+HOSTING_GUIDE.md
+BACKEND_PROXY_REVIEW.md
+BACKEND_PROXY_TESTING.md
+BACKEND_PROXY_MANUAL_TESTING.md
+BACKEND_PROXY_MANUAL_TESTING_REPORT.md
+BACKEND_PROXY_SUMMARY.md
+ERROR_HANDLING_REPORT.md
+GITHUB_PUSH_STEPS.md
+GITHUB_PUSH_STEPS_REPORT.md
+GITHUB_SETUP_GUIDE.md
+MULTI_IMAGE_FEATURE.md
+PRODUCTION_CHECKLIST.md
+PRODUCTION_PROGRESS.md
+PRODUCTION_READINESS_PLAN.md
+PRODUCTION_STATUS.md
+SECURITY_AUDIT_REPORT.md
