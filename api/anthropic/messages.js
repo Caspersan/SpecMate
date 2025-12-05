@@ -9,7 +9,7 @@
  * 3. The function will be available at: https://your-app.vercel.app/api/anthropic/messages
  */
 
-async function handler(req, res) {
+export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -148,28 +148,6 @@ async function handler(req, res) {
         details: `Unexpected error: ${error.name || 'Unknown'}`
       },
     })
-  }
-}
-
-// Export handler with error wrapper to catch any initialization errors
-export default async function (req, res) {
-  try {
-    await handler(req, res)
-  } catch (error) {
-    // Catch any errors that occur outside the handler (e.g., during initialization)
-    console.error('Fatal error in serverless function:', error)
-    console.error('Error stack:', error.stack)
-    
-    // Ensure we always return a valid JSON response
-    if (!res.headersSent) {
-      res.status(500).json({
-        error: {
-          message: error.message || 'Internal server error',
-          type: 'server_error',
-          details: `Fatal error: ${error.name || 'Unknown'} - ${error.message || 'No details available'}`
-        }
-      })
-    }
   }
 }
 
