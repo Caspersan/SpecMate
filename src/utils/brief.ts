@@ -82,19 +82,31 @@ If the brief is unclear or lacks specific requirements, return: "No specific pro
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       const errorMessage = errorData.error?.message || `API request failed with status ${response.status}`
+      const errorDetails = errorData.error?.details || ''
       
       // Handle specific error codes
       if (response.status === 401) {
-        throw new Error('API authentication failed. Brief intent extraction unavailable.')
+        const fullMessage = errorDetails
+          ? `API authentication failed. ${errorDetails}`
+          : 'API authentication failed. Brief intent extraction unavailable.'
+        throw new Error(fullMessage)
       }
       if (response.status === 429) {
         throw new Error('Rate limit exceeded. Brief intent extraction unavailable.')
       }
       if (response.status >= 500) {
-        throw new Error('API service unavailable. Brief intent extraction unavailable.')
+        // Include details if available for more helpful error messages
+        const fullMessage = errorDetails
+          ? `API service unavailable. ${errorDetails}`
+          : 'API service unavailable. Brief intent extraction unavailable.'
+        throw new Error(fullMessage)
       }
       
-      throw new Error(`Brief analysis failed: ${errorMessage}`)
+      // Include details in error message if available
+      const fullMessage = errorDetails
+        ? `Brief analysis failed: ${errorMessage}. ${errorDetails}`
+        : `Brief analysis failed: ${errorMessage}`
+      throw new Error(fullMessage)
     }
 
     const data = await response.json()

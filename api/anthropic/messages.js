@@ -35,15 +35,35 @@ module.exports = async function handler(req, res) {
   
   if (!apiKey) {
     console.error('ANTHROPIC_API_KEY environment variable is not set')
+    console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('ANTHROPIC') || k.includes('API')))
     return res.status(500).json({ 
       error: { 
-        message: 'API key not configured on server',
-        type: 'server_error'
+        message: 'API key not configured on server. Please set ANTHROPIC_API_KEY in Vercel environment variables.',
+        type: 'server_error',
+        details: 'The ANTHROPIC_API_KEY environment variable is missing. Go to Vercel Dashboard → Settings → Environment Variables to add it.'
+      } 
+    })
+  }
+  
+  // Validate API key format
+  if (!apiKey.startsWith('sk-ant-')) {
+    console.error('ANTHROPIC_API_KEY has invalid format (should start with "sk-ant-")')
+    return res.status(500).json({ 
+      error: { 
+        message: 'Invalid API key format on server',
+        type: 'server_error',
+        details: 'API key should start with "sk-ant-". Please verify your ANTHROPIC_API_KEY in Vercel environment variables.'
       } 
     })
   }
 
   try {
+    // Log request details (without sensitive data)
+    console.log('Forwarding request to Anthropic API')
+    console.log('Request body keys:', Object.keys(req.body || {}))
+    console.log('Model:', req.body?.model)
+    console.log('Messages count:', req.body?.messages?.length)
+    
     // Forward request to Anthropic API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -54,25 +74,50 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify(req.body),
     })
+    
+    console.log('Anthropic API response status:', response.status, response.statusText)
 
     // Parse response JSON (handle both success and error responses)
     let data
     try {
-      data = await response.json()
+      const responseText = await response.text()
+      console.log('Response preview:', responseText.substring(0, 200))
+      
+      if (!responseText) {
+        return res.status(500).json({
+          error: {
+            message: 'Empty response from Anthropic API',
+            type: 'server_error',
+            details: 'The API returned an empty response. This may indicate a service issue.'
+          },
+        })
+      }
+      
+      data = JSON.parse(responseText)
     } catch (parseError) {
+      console.error('Failed to parse API response:', parseError)
       // If response is not JSON, return error
       return res.status(500).json({
         error: {
-          message: 'Invalid response from API',
+          message: 'Invalid response from Anthropic API',
           type: 'server_error',
+          details: parseError.message || 'Response was not valid JSON'
         },
       })
     }
 
     // Forward the response status and data
+    // If Anthropic returned an error, forward it with the same status code
+    if (!response.ok) {
+      console.error('Anthropic API error:', data)
+    }
+    
     return res.status(response.status).json(data)
   } catch (error) {
     console.error('Proxy error:', error)
+    console.error('Error stack:', error.stack)
+    console.error('Error name:', error.name)
+    console.error('Error message:', error.message)
     
     // Handle network errors
     if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -80,6 +125,18 @@ module.exports = async function handler(req, res) {
         error: {
           message: 'Unable to connect to Anthropic API. Please try again later.',
           type: 'service_unavailable',
+          details: 'Network error when connecting to api.anthropic.com'
+        },
+      })
+    }
+    
+    // Handle other fetch-related errors
+    if (error.name === 'AbortError' || error.message.includes('aborted')) {
+      return res.status(504).json({
+        error: {
+          message: 'Request to Anthropic API timed out',
+          type: 'timeout',
+          details: 'The request took too long to complete'
         },
       })
     }
@@ -88,6 +145,7 @@ module.exports = async function handler(req, res) {
       error: {
         message: error.message || 'Internal server error',
         type: 'server_error',
+        details: `Unexpected error: ${error.name || 'Unknown'}`
       },
     })
   }

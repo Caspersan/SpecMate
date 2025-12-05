@@ -143,25 +143,38 @@ export async function analyzeImage({
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
     const errorMessage = errorData.error?.message || `API request failed with status ${response.status}`
+    const errorDetails = errorData.error?.details || ''
     
     // Log error for debugging (without sensitive headers)
     console.error('API Error Response:', {
       status: response.status,
       statusText: response.statusText,
-      errorMessage: errorData.error?.message || 'Unknown error'
+      errorMessage: errorData.error?.message || 'Unknown error',
+      errorDetails: errorData.error?.details || 'No details provided'
     })
     
     if (response.status === 401) {
-      throw new Error(`Invalid API key (401 Unauthorized). Error: ${errorMessage}. Please verify your API key at https://console.anthropic.com/`)
+      const fullMessage = errorDetails 
+        ? `${errorMessage}. ${errorDetails}`
+        : `${errorMessage}. Please verify your API key at https://console.anthropic.com/`
+      throw new Error(fullMessage)
     }
     if (response.status === 429) {
       throw new Error('Rate limit exceeded. Please try again in a moment.')
     }
     if (response.status >= 500) {
-      throw new Error('Anthropic API is currently unavailable. Please try again later.')
+      // Include details if available for more helpful error messages
+      const fullMessage = errorDetails 
+        ? `${errorMessage}. ${errorDetails}`
+        : 'Anthropic API is currently unavailable. Please try again later.'
+      throw new Error(fullMessage)
     }
     
-    throw new Error(errorMessage)
+    // Include details in error message if available
+    const fullMessage = errorDetails 
+      ? `${errorMessage}. ${errorDetails}`
+      : errorMessage
+    throw new Error(fullMessage)
   }
 
   // Parse response
