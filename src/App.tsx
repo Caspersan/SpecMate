@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Analytics } from '@vercel/analytics/react'
 import type { Analysis, ProjectLocation, ProjectBrief } from './types'
 import ImageUpload from './components/ImageUpload'
 import AnalysisOptions from './components/AnalysisOptions'
@@ -229,9 +228,6 @@ function App() {
       {showContactModal && (
         <ContactModal onClose={() => setShowContactModal(false)} />
       )}
-
-      {/* Vercel Analytics */}
-      <Analytics />
     </div>
   )
 }
