@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { ProjectLocation } from '../types'
-import { geocodeAddress, reverseGeocode, looksLikeAddress } from '../utils/geocode'
+import { geocodeAddress, reverseGeocode, looksLikeAddress, searchAddressSuggestions, type AddressSuggestion } from '../utils/geocode'
 
 interface LocationInputProps {
   onLocationChange: (location: ProjectLocation | null) => void
@@ -11,7 +11,13 @@ export default function LocationInput({ onLocationChange }: LocationInputProps) 
   const [error, setError] = useState<string | null>(null)
   const [location, setLocation] = useState<ProjectLocation | null>(null)
   const [isGeocoding, setIsGeocoding] = useState(false)
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [debouncedAddress, setDebouncedAddress] = useState('')
   const geocodeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const suggestionContainerRef = useRef<HTMLDivElement>(null)
 
   const parseDMSCoordinates = (input: string): { lat: number; lng: number } | null => {
     // Pattern to match DMS format: 25°43'01.7"N 80°11'42.7"W
@@ -210,16 +216,23 @@ export default function LocationInput({ onLocationChange }: LocationInputProps) 
     setInput(value)
     setError(null)
 
-    // Clear any pending geocoding timeout
+    // Clear any pending timeouts
     if (geocodeTimeoutRef.current) {
       clearTimeout(geocodeTimeoutRef.current)
       geocodeTimeoutRef.current = null
+    }
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+      debounceTimeoutRef.current = null
     }
 
     if (!value.trim()) {
       setLocation(null)
       onLocationChange(null)
       setIsGeocoding(false)
+      setSuggestions([])
+      setShowSuggestions(false)
+      setDebouncedAddress('')
       return
     }
 
@@ -227,34 +240,115 @@ export default function LocationInput({ onLocationChange }: LocationInputProps) 
     const coords = parseCoordinates(value)
     if (coords) {
       setIsGeocoding(true)
+      setSuggestions([])
+      setShowSuggestions(false)
       handleCoordinateInput(coords, value)
       return
     }
 
     // If not coordinates, check if it looks like an address
-    if (looksLikeAddress(value)) {
-      // Debounce address geocoding (wait 1 second after user stops typing)
-      setIsGeocoding(true)
-      geocodeTimeoutRef.current = setTimeout(() => {
-        handleAddressInput(value)
-      }, 1000)
+    if (looksLikeAddress(value) || value.length >= 5) {
+      // Debounce address search with 500ms delay
+      debounceTimeoutRef.current = setTimeout(() => {
+        setDebouncedAddress(value)
+      }, 500)
       return
     }
 
-    // If it's neither coordinates nor a clear address, show error after a delay
-    setIsGeocoding(false)
-    geocodeTimeoutRef.current = setTimeout(() => {
-      setLocation(null)
-      onLocationChange(null)
-      setError(`Invalid input. Enter an address (e.g., "123 Main St, New York, NY") or coordinates (e.g., "40.7128, -74.0060" or "25°43'01.7"N 80°11'42.7"W")`)
-    }, 1000)
+    // Clear suggestions for short input
+    setSuggestions([])
+    setShowSuggestions(false)
   }
 
-  // Cleanup timeout on unmount
+  const handleClearInput = () => {
+    setInput('')
+    setLocation(null)
+    onLocationChange(null)
+    setSuggestions([])
+    setShowSuggestions(false)
+    setError(null)
+    setDebouncedAddress('')
+    if (geocodeTimeoutRef.current) {
+      clearTimeout(geocodeTimeoutRef.current)
+      geocodeTimeoutRef.current = null
+    }
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+      debounceTimeoutRef.current = null
+    }
+  }
+
+  const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
+    const newLocation: ProjectLocation = {
+      input: suggestion.displayName,
+      coordinates: suggestion.fullResult.coordinates,
+      jurisdiction: suggestion.fullResult.jurisdiction || '',
+      buildingCode: suggestion.fullResult.buildingCode || '',
+    }
+    
+    setInput(suggestion.displayName)
+    setLocation(newLocation)
+    onLocationChange(newLocation)
+    setSuggestions([])
+    setShowSuggestions(false)
+    setError(null)
+  }
+
+  // Effect to fetch suggestions when debouncedAddress changes
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!debouncedAddress || debouncedAddress.length < 5) {
+        setSuggestions([])
+        setShowSuggestions(false)
+        setIsSearching(false)
+        return
+      }
+
+      // Don't search for coordinates
+      const coords = parseCoordinates(debouncedAddress)
+      if (coords) {
+        return
+      }
+
+      setIsSearching(true)
+      setShowSuggestions(true)
+
+      try {
+        const results = await searchAddressSuggestions(debouncedAddress)
+        setSuggestions(results)
+      } catch (error) {
+        console.error('Failed to fetch address suggestions:', error)
+        setSuggestions([])
+      } finally {
+        setIsSearching(false)
+      }
+    }
+
+    fetchSuggestions()
+  }, [debouncedAddress])
+
+  // Click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionContainerRef.current && !suggestionContainerRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (geocodeTimeoutRef.current) {
         clearTimeout(geocodeTimeoutRef.current)
+      }
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
       }
     }
   }, [])
@@ -269,25 +363,82 @@ export default function LocationInput({ onLocationChange }: LocationInputProps) 
           <label htmlFor="location-input" className="block text-sm font-medium text-gray-700 mb-2">
             Enter address or coordinates for code compliance analysis
           </label>
-          <div className="relative">
+          <div className="relative" ref={suggestionContainerRef}>
             <input
               id="location-input"
               type="text"
               value={input}
               onChange={(e) => handleInputChange(e.target.value)}
               placeholder={`123 Main St, New York, NY or 40.7128, -74.0060`}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className="w-full px-4 py-2 pr-20 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               disabled={isGeocoding}
             />
-            {isGeocoding && (
+            
+            {/* Clear button */}
+            {input && (
+              <button
+                onClick={handleClearInput}
+                className="absolute right-12 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Clear input"
+                type="button"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+            
+            {/* Loading indicator */}
+            {(isGeocoding || isSearching) && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
               </div>
             )}
+
+            {/* Suggestions dropdown */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-b-lg shadow-lg max-h-60 overflow-y-auto">
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleSelectSuggestion(suggestion)}
+                    className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 cursor-pointer"
+                  >
+                    <div className="text-sm text-gray-900">{suggestion.displayName}</div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Enter an address or coordinates (lat, lng or DMS format) to get building code compliance notes for materials
-          </p>
+
+          {/* Helper text based on input length */}
+          {input && input.length > 0 && input.length < 5 && !parseCoordinates(input) && (
+            <p className="text-xs text-gray-500 mt-1">
+              Type at least 5 characters to see suggestions
+            </p>
+          )}
+          
+          {/* Searching indicator */}
+          {isSearching && (
+            <p className="text-xs text-blue-600 mt-1">
+              Searching...
+            </p>
+          )}
+
+          {/* Default helper text */}
+          {(!input || input.length === 0) && (
+            <p className="text-xs text-gray-500 mt-1">
+              Enter an address or coordinates (lat, lng or DMS format) to get building code compliance notes for materials
+            </p>
+          )}
+          
+          {/* Show regular helper for coords or valid long input */}
+          {input && input.length >= 5 && !isSearching && !showSuggestions && (
+            <p className="text-xs text-gray-500 mt-1">
+              Enter an address or coordinates (lat, lng or DMS format) to get building code compliance notes for materials
+            </p>
+          )}
         </div>
 
         {error && (

@@ -27,6 +27,100 @@ export interface GeocodeError {
 }
 
 /**
+ * Address suggestion for autocomplete
+ */
+export interface AddressSuggestion {
+  displayName: string;
+  fullResult: GeocodeResult;
+}
+
+/**
+ * Search for address suggestions (for autocomplete)
+ * Returns multiple results without the 1-second delay
+ */
+export async function searchAddressSuggestions(address: string): Promise<AddressSuggestion[]> {
+  try {
+    // Encode address for URL
+    const encodedAddress = encodeURIComponent(address);
+    
+    // Nominatim API endpoint - get up to 5 suggestions
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=5&addressdetails=1`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'SpecMate/1.0 (Architectural Material Analysis Tool)',
+      },
+    });
+
+    if (!response.ok) {
+      // Silently fail for suggestions (as per requirements)
+      console.error('Address suggestion API error:', response.status);
+      return [];
+    }
+
+    const data = await response.json();
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    // Map results to suggestions
+    const suggestions: AddressSuggestion[] = data.map((result: any) => {
+      const lat = parseFloat(result.lat);
+      const lng = parseFloat(result.lon);
+      const addressParts = result.address || {};
+      const formattedAddress = result.display_name || address;
+      
+      // Build jurisdiction string
+      const jurisdictionParts: string[] = [];
+      if (addressParts.city || addressParts.town || addressParts.village) {
+        jurisdictionParts.push(addressParts.city || addressParts.town || addressParts.village);
+      }
+      if (addressParts.state) {
+        jurisdictionParts.push(addressParts.state);
+      }
+      if (addressParts.country) {
+        jurisdictionParts.push(addressParts.country);
+      }
+      const jurisdiction = jurisdictionParts.length > 0 
+        ? jurisdictionParts.join(', ') 
+        : formattedAddress;
+
+      // Determine building code
+      const buildingCode = determineBuildingCode(
+        lat,
+        lng,
+        addressParts.state,
+        addressParts.city || addressParts.town || addressParts.village,
+        addressParts.country
+      );
+
+      return {
+        displayName: formattedAddress,
+        fullResult: {
+          coordinates: { lat, lng },
+          address: {
+            formatted: formattedAddress,
+            city: addressParts.city || addressParts.town || addressParts.village,
+            state: addressParts.state,
+            country: addressParts.country,
+            postalCode: addressParts.postcode,
+          },
+          jurisdiction,
+          buildingCode,
+        }
+      };
+    });
+
+    return suggestions;
+  } catch (error) {
+    // Silently fail for suggestions (as per requirements)
+    console.error('Failed to fetch address suggestions:', error);
+    return [];
+  }
+}
+
+/**
  * Geocode an address to coordinates and extract jurisdiction information
  */
 export async function geocodeAddress(address: string): Promise<GeocodeResult> {
