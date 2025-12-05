@@ -9,7 +9,21 @@
  * 3. The function will be available at: https://your-app.vercel.app/api/anthropic/messages
  */
 
-export default async function handler(req, res) {
+// Log immediately when module loads (helps debug if function is being invoked)
+try {
+  console.log('[ANTHROPIC MESSAGES] Module loaded at:', new Date().toISOString())
+  console.log('[ANTHROPIC MESSAGES] Node version:', process.version)
+  console.log('[ANTHROPIC MESSAGES] Environment check - ANTHROPIC_API_KEY exists:', !!process.env.ANTHROPIC_API_KEY)
+} catch (e) {
+  // Ignore logging errors
+}
+
+async function handlerImpl(req, res) {
+  try {
+    // Log immediately when handler is invoked
+    console.log('[ANTHROPIC MESSAGES] Handler invoked at:', new Date().toISOString())
+    console.log('[ANTHROPIC MESSAGES] Request method:', req.method)
+    console.log('[ANTHROPIC MESSAGES] Request URL:', req.url)
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -148,6 +162,38 @@ export default async function handler(req, res) {
         details: `Unexpected error: ${error.name || 'Unknown'}`
       },
     })
+  } catch (handlerError) {
+    // Catch any errors in the handler itself
+    console.error('[ANTHROPIC MESSAGES] Handler error:', handlerError)
+    if (!res.headersSent) {
+      return res.status(500).json({
+        error: {
+          message: handlerError.message || 'Internal server error',
+          type: 'server_error',
+          details: `Handler error: ${handlerError.name || 'Unknown'}`
+        }
+      })
+    }
+  }
+}
+
+// Export with top-level error handling
+export default async function handler(req, res) {
+  try {
+    await handlerImpl(req, res)
+  } catch (error) {
+    // Catch any errors that occur outside handlerImpl
+    console.error('[ANTHROPIC MESSAGES] Top-level error:', error)
+    console.error('[ANTHROPIC MESSAGES] Error stack:', error?.stack)
+    if (!res.headersSent) {
+      res.status(500).json({
+        error: {
+          message: error?.message || 'Internal server error',
+          type: 'server_error',
+          details: `Top-level error: ${error?.name || 'Unknown'} - ${error?.message || 'No details'}`
+        }
+      })
+    }
   }
 }
 
