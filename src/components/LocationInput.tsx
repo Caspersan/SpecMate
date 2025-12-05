@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { ProjectLocation } from '../types'
-import { geocodeAddress, reverseGeocode, looksLikeAddress, searchAddressSuggestions, type AddressSuggestion } from '../utils/geocode'
+import { reverseGeocode, looksLikeAddress, searchAddressSuggestions, type AddressSuggestion } from '../utils/geocode'
 
 interface LocationInputProps {
   onLocationChange: (location: ProjectLocation | null) => void
@@ -185,31 +185,6 @@ export default function LocationInput({ onLocationChange }: LocationInputProps) 
         setError(null)
         setIsGeocoding(false)
       })
-  }
-
-  // Handle address input (with debouncing)
-  const handleAddressInput = async (address: string) => {
-    setIsGeocoding(true)
-    setError(null)
-
-    try {
-      const geocodeResult = await geocodeAddress(address)
-      const newLocation: ProjectLocation = {
-        input: address,
-        coordinates: geocodeResult.coordinates,
-        jurisdiction: geocodeResult.jurisdiction,
-        buildingCode: geocodeResult.buildingCode,
-      }
-      setLocation(newLocation)
-      onLocationChange(newLocation)
-      setError(null)
-    } catch (err) {
-      setLocation(null)
-      onLocationChange(null)
-      setError(err instanceof Error ? err.message : 'Failed to geocode address. Please try again or use coordinates.')
-    } finally {
-      setIsGeocoding(false)
-    }
   }
 
   const handleInputChange = (value: string) => {
