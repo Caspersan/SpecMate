@@ -131,11 +131,13 @@ node server.js
   - 📝 `types/` - TypeScript interfaces (including logging types)
   - 🧩 `components/` - React components
     - `ImageUpload.tsx` - Multiple image upload with grid display
+    - `LocationInput.tsx` - Smart address search with debounced autocomplete
     - `ContactModal.tsx` - Contact form modal
     - `ReportModal.tsx` - Report preview and download
     - And more...
   - 🔧 `utils/` - Utility functions
     - `analyze.ts` - Material analysis with Claude API
+    - `geocode.ts` - Geocoding and address suggestions with debouncing
     - `logging.ts` - Usage and contact logging
     - `report.ts` - PDF and Markdown report generation
     - And more...
@@ -176,6 +178,9 @@ node server.js
 - 📊 **Material Analysis**: Identifies construction materials and classifies by feasibility (Tier 1, 2, 3)
 - 📋 **CSI MasterFormat**: Automatic classification by CSI divisions
 - 🌍 **Location-Based Analysis**: Building code compliance based on project location
+  - 🔍 **Smart Address Search**: Debounced autocomplete with live suggestions (500ms delay, 5-character minimum)
+  - 📍 **Flexible Input**: Supports addresses, decimal coordinates, or DMS format
+  - 🎯 **Quick Selection**: Click suggestions to auto-populate location details
 - 📝 **Project Brief Integration**: Constrain analysis based on project requirements
 - 📄 **Report Generation**: Generate comprehensive PDF and Markdown reports
 - 📧 **Contact Form**: Submit questions and feedback (logged to backend)

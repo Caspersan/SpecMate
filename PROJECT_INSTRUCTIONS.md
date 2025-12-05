@@ -38,10 +38,15 @@ Architects often create conceptual designs with materials that may not be readil
    - Brief constraints applied to material analysis
 
 3. **Location Input**
+   - Smart address search with debounced autocomplete (500ms delay)
+   - Live address suggestions with 5-character minimum
+   - Click-to-select from dropdown suggestions
+   - Clear button (×) to reset input
    - Address or coordinate input (decimal degrees or DMS format)
    - Automatic geocoding and jurisdiction detection
    - Building code identification
    - Code compliance notes for materials
+   - Helper text and loading indicators for better UX
 
 4. **Analysis Options**
    - Toggle for sustainability notes
@@ -123,7 +128,7 @@ src/
 ├── components/
 │   ├── ImageUpload.tsx          # Image upload with drag-and-drop
 │   ├── AnalysisOptions.tsx      # Sustainability and alternatives toggles
-│   ├── LocationInput.tsx        # Location input with geocoding
+│   ├── LocationInput.tsx        # Smart location input with debounced autocomplete
 │   ├── BriefInput.tsx           # Brief text/document input
 │   ├── ResultsDisplay.tsx       # Material results display
 │   ├── SummaryStats.tsx         # Summary statistics with Generate Report button
@@ -140,7 +145,7 @@ src/
 │   ├── prompt.ts                # Prompt generation
 │   ├── brief.ts                 # Brief intent extraction
 │   ├── report.ts                # Report generation (Markdown & PDF)
-│   ├── geocode.ts               # Geocoding utilities
+│   ├── geocode.ts               # Geocoding and address suggestions with debouncing
 │   ├── logging.ts               # Usage and contact logging utilities
 │   └── testVision.ts           # API testing utilities
 └── App.tsx                      # Main application component
@@ -174,6 +179,20 @@ src/
 - File validation (type and size)
 - Base64 conversion for API
 - All images analyzed together in a single analysis
+
+### Location Input
+
+- **Debounced Search**: 500ms delay after user stops typing
+- **Character Minimum**: Only searches when 5+ characters entered
+- **Live Suggestions**: Dropdown with up to 5 address suggestions
+- **Auto-Complete**: Click any suggestion to populate input
+- **Clear Button**: × button to reset input and suggestions
+- **Loading States**: Shows "Searching..." during API calls
+- **Helper Text**: Contextual messages based on input length
+- **Click-Outside**: Closes dropdown when clicking outside input area
+- **Coordinate Support**: Still supports decimal (40.7128, -74.0060) and DMS format (25°43'01.7"N 80°11'42.7"W)
+- **Smart Detection**: Automatically distinguishes between addresses and coordinates
+- **Reverse Geocoding**: Converts coordinates to jurisdiction and building code info
 
 ### Material Analysis
 
@@ -221,8 +240,15 @@ src/
 
 ### Location Processing
 
-- Supports addresses and coordinates (decimal or DMS)
-- Automatic geocoding
+- **Smart Address Search**: Debounced autocomplete with 500ms delay
+- **Live Suggestions**: Shows address suggestions after typing 5+ characters
+- **Dropdown Selection**: Click suggestions to auto-populate location
+- **Clear Functionality**: Reset input with clear button (×)
+- **Flexible Input**: Supports addresses and coordinates (decimal or DMS)
+- **Helper Text**: Shows "Type at least 5 characters to see suggestions" for short inputs
+- **Loading Indicators**: "Searching..." text and spinner during API calls
+- **Click-Outside**: Closes suggestions dropdown when clicking outside
+- Automatic geocoding with OpenStreetMap Nominatim API
 - Jurisdiction detection
 - Building code identification
 - Code compliance notes for materials
@@ -579,7 +605,19 @@ For issues or questions:
 
 ## Version History
 
-- **v1.2.1** (Current): API endpoint fixes for production
+- **v1.3.0** (Current): Enhanced location input with debounced search
+  - Implemented 500ms debounced address search for better UX
+  - Added live address suggestions dropdown (5-character minimum)
+  - Click-to-select functionality for quick address selection
+  - Clear button (×) to reset input and suggestions
+  - Helper text showing character requirements
+  - Loading indicators during address search
+  - Click-outside handler to close suggestions dropdown
+  - Maintains existing coordinate parsing (decimal and DMS formats)
+  - New `searchAddressSuggestions()` function in geocode utility
+  - Enhanced LocationInput component with autocomplete state management
+
+- **v1.2.1**: API endpoint fixes for production
   - Fixed 404 errors on contact form and logging endpoints
   - Converted all API functions to CommonJS format (Vercel compatible)
   - Added CORS headers to all endpoints
