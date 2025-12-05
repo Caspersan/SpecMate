@@ -141,7 +141,22 @@ export async function analyzeImage({
 
   // Handle HTTP errors
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
+    // Try to parse error response, but handle cases where it's not JSON
+    let errorData: any = {}
+    let errorText = ''
+    
+    try {
+      errorText = await response.text()
+      if (errorText) {
+        errorData = JSON.parse(errorText)
+      }
+    } catch (parseError) {
+      // If response isn't JSON, use the raw text
+      console.error('Failed to parse error response as JSON:', parseError)
+      console.error('Raw error response:', errorText.substring(0, 500))
+      errorData = { error: { message: errorText || 'Unknown error', details: 'Response was not valid JSON' } }
+    }
+    
     const errorMessage = errorData.error?.message || `API request failed with status ${response.status}`
     const errorDetails = errorData.error?.details || ''
     
@@ -150,7 +165,8 @@ export async function analyzeImage({
       status: response.status,
       statusText: response.statusText,
       errorMessage: errorData.error?.message || 'Unknown error',
-      errorDetails: errorData.error?.details || 'No details provided'
+      errorDetails: errorData.error?.details || 'No details provided',
+      rawResponse: errorText.substring(0, 200)
     })
     
     if (response.status === 401) {
