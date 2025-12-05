@@ -4,14 +4,16 @@ Material Feasibility Analyzer for Architects
 
 ## 🚨 Important: Before You Start
 
-**This project requires a backend proxy server for production use.** The application includes:
-- ✅ Frontend React application
-- ✅ Backend Express server (for development/production)
-- ✅ Vercel serverless functions (for production deployment)
-- ✅ Usage logging system
+**This project uses a backend proxy to keep your API key secure.** The application includes:
+- ✅ Frontend React application (TypeScript + Vite)
+- ✅ Vercel serverless functions (production - recommended)
+- ✅ Express server option (local development/self-hosted)
+- ✅ Usage analytics logging system
 - ✅ Contact form with backend logging
 
-**You must set up both frontend and backend components for the application to work properly.**
+**For production deployment on Vercel**: Everything is configured and ready to deploy. Just set your `ANTHROPIC_API_KEY` environment variable in Vercel dashboard and deploy!
+
+**For local development**: Use the Vite dev server (API key in `.env` file) or run both frontend + backend server for full functionality.
 
 ## Setup Instructions
 
@@ -229,8 +231,14 @@ The application uses the following backend endpoints:
 - `POST /api/logs/contact` - Contact form submissions
 
 All endpoints are implemented as:
-- Express routes in `server.js` (for self-hosted)
-- Vercel serverless functions in `api/` directory (for Vercel)
+- **Vercel serverless functions** in `api/` directory (production - CommonJS format)
+- **Express routes** in `server.js` (local development/self-hosted option)
+
+### Recent Updates (Dec 2024)
+- ✅ All API endpoints converted to CommonJS format for Vercel compatibility
+- ✅ CORS headers added to all endpoints
+- ✅ OPTIONS method handling for CORS preflight requests
+- ✅ Logging uses Vercel's console logging (viewable in Functions > Logs)
 
 ## Logging System
 
@@ -240,13 +248,14 @@ The application automatically logs:
 - ✅ Contact form submissions
 
 **Log Storage:**
-- Development: Files in `logs/` directory (gitignored)
-- Production: Can be migrated to database (structure ready)
+- **Production (Vercel)**: Console logging to Vercel's Functions > Logs (view in Vercel dashboard)
+- **Development (Express server)**: Files in `logs/` directory (gitignored)
+- **Ready for migration**: Log structure supports database integration
 
 **Privacy:**
 - All logging is anonymous (session IDs, no personal data)
-- Contact form submissions include name/subject/message (user-provided)
-- No sensitive data (API keys, full addresses) in logs
+- Contact form submissions include name/subject/message (user-provided only)
+- No sensitive data (API keys, full addresses) stored in logs
 
 ## Environment Variables
 
@@ -284,10 +293,12 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 - ✅ Verify backend server is accessible
 
 ### Logging Not Working
-- ✅ Ensure backend server is running (for development)
-- ✅ Check `logs/` directory is writable
-- ✅ Verify backend endpoints are accessible
-- ✅ Check browser console for errors (logging fails silently to not interrupt UX)
+- ✅ Ensure backend is deployed/running (Vercel serverless or Express server)
+- ✅ Check browser console for network errors
+- ✅ Verify backend endpoints return 200 status (not 404)
+- ✅ For Vercel: Check Functions > Logs in Vercel dashboard
+- ✅ For Express: Check `logs/` directory is writable
+- ⚠️ Note: Logging fails silently to not interrupt user experience
 
 ### Build Errors
 - ✅ Run `npm install` to ensure all dependencies are installed
@@ -297,18 +308,27 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 
 ## Production Deployment Checklist
 
-Before deploying to production:
+### Vercel Deployment (Recommended)
 
-- [ ] Set `ANTHROPIC_API_KEY` in hosting platform environment variables
-- [ ] Build frontend: `npm run build`
-- [ ] Test backend endpoints are accessible
-- [ ] Verify logging directory is writable (or configure database)
+- [ ] Connect GitHub repository to Vercel
+- [ ] Set `ANTHROPIC_API_KEY` in Vercel environment variables (Settings → Environment Variables)
+- [ ] Deploy (automatic on git push to main branch)
+- [ ] Test backend endpoints are accessible (should return 200, not 404)
 - [ ] Test contact form submission
+- [ ] Test material analysis
+- [ ] Test report generation (PDF download)
 - [ ] Verify API key is NOT exposed in client-side code
-- [ ] Test report generation
-- [ ] Check that all features work in production environment
+- [ ] Check Functions > Logs in Vercel dashboard for logging output
+
+### Self-Hosted Deployment
+
+- [ ] Set `ANTHROPIC_API_KEY` environment variable on server
+- [ ] Build frontend: `npm run build`
+- [ ] Start backend server: `node server.js`
+- [ ] Verify logging directory is writable
+- [ ] Test all backend endpoints
+- [ ] Configure log rotation/cleanup
 - [ ] Set up monitoring for backend endpoints
-- [ ] Configure log rotation/cleanup (if using file-based logging)
 
 ## Support
 

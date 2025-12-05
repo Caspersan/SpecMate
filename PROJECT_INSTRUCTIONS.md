@@ -260,9 +260,10 @@ src/
   - Timestamp
 
 - **Backend Storage**: All logs stored in backend:
-  - File-based storage (development)
+  - Console logging to Vercel Functions (production)
+  - File-based storage (Express server development)
   - Organized by date and type
-  - Ready for database integration (production)
+  - Ready for database integration
 
 ## Data Structures
 
@@ -453,14 +454,26 @@ Output in `dist/` directory.
 
 ### Environment Configuration
 
-- Development: Vite dev server with proxy
-- Production: Requires backend proxy for API key security
-- Environment variables: `VITE_ANTHROPIC_API_KEY`
-- Backend endpoints:
-  - `/api/anthropic/messages` - Claude API proxy
-  - `/api/logs/usage` - Usage analytics logging
-  - `/api/logs/report` - Report generation logging
-  - `/api/logs/contact` - Contact form logging
+- **Development**: Vite dev server with proxy configuration
+- **Production**: Backend proxy for API key security (Vercel serverless or Express)
+- **Environment variables**: 
+  - Frontend: `VITE_ANTHROPIC_API_KEY` (in `.env` file)
+  - Backend: `ANTHROPIC_API_KEY` (in Vercel dashboard or server environment)
+
+### Backend Endpoints (CommonJS format)
+
+All API endpoints use CommonJS (`module.exports`) for Vercel compatibility:
+
+- `POST /api/anthropic/messages` - Claude API proxy (CORS enabled)
+- `POST /api/logs/usage` - Usage analytics logging (CORS enabled)
+- `POST /api/logs/report` - Report generation logging (CORS enabled)
+- `POST /api/logs/contact` - Contact form logging (CORS enabled)
+
+**Recent Updates (Dec 2024)**:
+- ✅ Converted all endpoints from ES6 modules to CommonJS
+- ✅ Added CORS headers and OPTIONS method handling
+- ✅ Fixed 404 errors on production deployment
+- ✅ Logging uses Vercel console.log (viewable in Functions > Logs)
 
 ## Security Considerations
 
@@ -501,13 +514,15 @@ Output in `dist/` directory.
 
 1. **PDF/DOCX Parsing**: Full text extraction from PDF/DOCX files requires additional libraries. Currently shows placeholder message - users can paste content directly.
 
-2. **API Key Security**: In production, requires backend proxy to keep API key server-side. Current implementation exposes key in development (acceptable for dev only).
+2. **API Key Security**: ✅ Production uses backend proxy (Vercel serverless functions or Express server). API key never exposed to client. Development mode uses Vite proxy for security.
 
 3. **Geocoding**: Uses simplified geocoding service. For production, consider using Google Maps Geocoding API or similar.
 
 4. **No Data Persistence**: Analysis results are not saved - only available during session. Usage logs are stored in backend for analytics.
 
 5. **Rate Limiting**: Subject to Anthropic API rate limits.
+
+6. **Log Storage**: Vercel serverless functions use console logging (viewable in dashboard). For long-term analytics, migrate to database.
 
 ## Future Enhancements
 
@@ -564,7 +579,15 @@ For issues or questions:
 
 ## Version History
 
-- **v1.2.0** (Current): Multi-image support, contact form, and logging
+- **v1.2.1** (Current): API endpoint fixes for production
+  - Fixed 404 errors on contact form and logging endpoints
+  - Converted all API functions to CommonJS format (Vercel compatible)
+  - Added CORS headers to all endpoints
+  - Added OPTIONS method handling for CORS preflight
+  - Improved logging for Vercel serverless environment
+  - Updated documentation with deployment instructions
+
+- **v1.2.0**: Multi-image support, contact form, and logging
   - Multiple image upload support with grid display
   - Individual image removal and clear all functionality
   - Contact form with modal interface
