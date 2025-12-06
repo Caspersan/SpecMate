@@ -166,7 +166,9 @@ export async function analyzeImage({
       statusText: response.statusText,
       errorMessage: errorData.error?.message || 'Unknown error',
       errorDetails: errorData.error?.details || 'No details provided',
-      rawResponse: errorText.substring(0, 200)
+      rawResponse: errorText.substring(0, 500),
+      fullRawResponse: errorText,
+      responseHeaders: Object.fromEntries(response.headers.entries())
     })
     
     if (response.status === 401) {

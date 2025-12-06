@@ -19,11 +19,11 @@ try {
 }
 
 async function handlerImpl(req, res) {
-  try {
-    // Log immediately when handler is invoked
-    console.log('[ANTHROPIC MESSAGES] Handler invoked at:', new Date().toISOString())
-    console.log('[ANTHROPIC MESSAGES] Request method:', req.method)
-    console.log('[ANTHROPIC MESSAGES] Request URL:', req.url)
+  // Log immediately when handler is invoked
+  console.log('[ANTHROPIC MESSAGES] Handler invoked at:', new Date().toISOString())
+  console.log('[ANTHROPIC MESSAGES] Request method:', req.method)
+  console.log('[ANTHROPIC MESSAGES] Request URL:', req.url)
+  
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -162,18 +162,6 @@ async function handlerImpl(req, res) {
         details: `Unexpected error: ${error.name || 'Unknown'}`
       },
     })
-  } catch (handlerError) {
-    // Catch any errors in the handler itself
-    console.error('[ANTHROPIC MESSAGES] Handler error:', handlerError)
-    if (!res.headersSent) {
-      return res.status(500).json({
-        error: {
-          message: handlerError.message || 'Internal server error',
-          type: 'server_error',
-          details: `Handler error: ${handlerError.name || 'Unknown'}`
-        }
-      })
-    }
   }
 }
 
